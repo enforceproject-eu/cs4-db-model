@@ -1,15 +1,11 @@
 package org.n52.project.enforce.cs4.playas.db.repository;
 
-import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.n52.project.enforce.cs4.playas.db.model.ObservedProperty;
 import org.n52.project.enforce.cs4.playas.db.model.ObservedPropertyPK;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 /**
  * <p>
@@ -19,7 +15,8 @@ import org.springframework.data.repository.query.Param;
  * @author Benjamin Pross (b.pross@52north.org)
  * @since 1.0.0
  */
-public interface DataReferenceRepository extends JpaRepository<ObservedProperty, ObservedPropertyPK> {
+@Repository
+public interface ObservedPropertyRepository extends JpaRepository<ObservedProperty, ObservedPropertyPK> {
 
     /**
      * <p>

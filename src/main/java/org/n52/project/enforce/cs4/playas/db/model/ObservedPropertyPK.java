@@ -1,7 +1,6 @@
 package org.n52.project.enforce.cs4.playas.db.model;
 
 import java.io.Serializable;
-import java.time.OffsetDateTime;
 import java.util.Objects;
 
 import jakarta.persistence.Embeddable;

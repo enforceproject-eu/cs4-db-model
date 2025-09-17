@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(
-        name = "observed_property")
+        name = "cs4_playas_observed_property")
 public class ObservedProperty {
 
     @EmbeddedId
