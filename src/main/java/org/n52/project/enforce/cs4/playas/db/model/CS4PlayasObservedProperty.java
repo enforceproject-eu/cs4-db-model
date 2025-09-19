@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(
-        name = "cs4_playas_observed_property")
+        name = "cs4playas_observed_property")
 public class CS4PlayasObservedProperty {
 
     @Id

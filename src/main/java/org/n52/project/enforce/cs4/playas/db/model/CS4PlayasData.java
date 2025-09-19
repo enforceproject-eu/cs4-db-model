@@ -1,14 +1,16 @@
 package org.n52.project.enforce.cs4.playas.db.model;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.locationtech.jts.geom.Point;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
@@ -22,7 +24,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(
-        name = "cs4_playas_data")
+        name = "cs4playas_data")
 public class CS4PlayasData {
 
     @Id
@@ -86,8 +88,18 @@ public class CS4PlayasData {
             name = "remarks")
     private String remarks;
 
-    @OneToMany
-    private Set<CS4PlayasObservedPropertyCount> observedPropertyCount = new HashSet<CS4PlayasObservedPropertyCount>();
+    
+//    @JoinTable(
+//            name = "cs4_playas_data_observed_property_count",
+//            joinColumns = @JoinColumn(
+//                    name = "id"))
+//    @Column(
+//            name = "observed_property_count")
+//    @ElementCollection
+//    @MapKeyColumn(name="observed_property_id")
+//    @Column(name="count")
+    @ElementCollection
+    private Map<CS4PlayasObservedProperty, Integer> observedPropertyCount = new HashMap<>();
 
 //    @ManyToMany
 //    @JoinTable(
@@ -246,35 +258,20 @@ public class CS4PlayasData {
         this.remarks = remarks;
     }
 
-    public Set<CS4PlayasObservedPropertyCount> getObservedPropertyCount() {
+    public Map<CS4PlayasObservedProperty, Integer> getObservedPropertyCount() {
         return observedPropertyCount;
     }
 
-    public void setObservedPropertyCount(Set<CS4PlayasObservedPropertyCount> observedPropertyCount) {
+    public void setObservedPropertyCount(Map<CS4PlayasObservedProperty, Integer> observedPropertyCount) {
         this.observedPropertyCount = observedPropertyCount;
     }
 
-    public void addObservedPropertyCount(CS4PlayasObservedPropertyCount observedPropertyCount) {
+    public void putObservedPropertyCount(CS4PlayasObservedProperty observedProperty, Integer count) {
         if (observedPropertyCount == null) {
-            this.observedPropertyCount = new HashSet<>();
+            this.observedPropertyCount = new HashMap<>();
         }
-        this.observedPropertyCount.add(observedPropertyCount);
+        this.observedPropertyCount.put(observedProperty, count);
     }
-
-//    public Set<ObservedProperty> getAggregates() {
-//        return observedProperties;
-//    }
-//
-//    public void setAggregates(Set<ObservedProperty> aggregates) {
-//        this.observedProperties = aggregates;
-//    }
-//
-//    public void addAggregate(ObservedProperty dataReference) {
-//        if (observedProperties == null) {
-//            this.observedProperties = new HashSet<>();
-//        }
-//        this.observedProperties.add(dataReference);
-//    }
 
     @Override
     public String toString() {

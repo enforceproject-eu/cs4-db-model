@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS public.cs4_playas_data
+CREATE TABLE IF NOT EXISTS public.cs4playas_data
 (
     id int NOT NULL,
     location_name character varying(100),
@@ -15,37 +15,28 @@ CREATE TABLE IF NOT EXISTS public.cs4_playas_data
     cleaning_date date,
     total_items int,
     remarks character varying(1024),
-    CONSTRAINT cs4_playas_data_pkey PRIMARY KEY (id)
+    CONSTRAINT cs4playas_data_pkey PRIMARY KEY (id)
 );
     
-CREATE TABLE IF NOT EXISTS public.cs4_playas_observed_property
+CREATE TABLE IF NOT EXISTS public.cs4playas_observed_property
 (
     id int NOT NULL,
     name character varying(255),
-    CONSTRAINT datareference_pkey PRIMARY KEY (id)
+    CONSTRAINT cs4playas_observed_property_pkey PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public.cs4_playas_observed_property_count
+CREATE TABLE IF NOT EXISTS public.cs4playas_data_observed_property_count
 (
     cs4playas_data_id integer NOT NULL,
-    cs4playas_observed_property_id integer NOT NULL,
-    count integer,
-    CONSTRAINT cs4_playas_observed_property_count_pkey PRIMARY KEY (cs4playas_data_id, cs4playas_observed_property_id)
-);
-
-CREATE TABLE IF NOT EXISTS public.cs4_playas_data_observed_property_count
-(
-    cs4playas_data_id integer NOT NULL,
-    observed_property_count_cs4playas_data_id integer NOT NULL,
-    observed_property_count_cs4playas_observed_property_id integer NOT NULL,
-    CONSTRAINT cs4_playas_data_observed_property_count_pkey PRIMARY KEY (cs4playas_data_id, observed_property_count_cs4playas_data_id, observed_property_count_cs4playas_observed_property_id),
-    CONSTRAINT uk4082an539eed81dpt6orqumed UNIQUE (observed_property_count_cs4playas_data_id, observed_property_count_cs4playas_observed_property_id),
-    CONSTRAINT fk9vxlukxonwq7s86cqwew5j6sv FOREIGN KEY (cs4playas_data_id)
-        REFERENCES public.cs4_playas_data (id) MATCH SIMPLE
+    observed_property_count integer,
+    observed_property_count_key integer NOT NULL,
+    CONSTRAINT cs4playas_data_observed_property_count_pkey PRIMARY KEY (cs4playas_data_id, observed_property_count_key),
+    CONSTRAINT cs4playas_data_fkey FOREIGN KEY (cs4playas_data_id)
+        REFERENCES public.cs4playas_data (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
-    CONSTRAINT fkfqqrke0upl41tn5mpwro034j4 FOREIGN KEY (observed_property_count_cs4playas_data_id, observed_property_count_cs4playas_observed_property_id)
-        REFERENCES public.cs4_playas_observed_property_count (cs4playas_data_id, cs4playas_observed_property_id) MATCH SIMPLE
+    CONSTRAINT cs4playas_observed_property_fkex FOREIGN KEY (observed_property_count_key)
+        REFERENCES public.cs4playas_observed_property (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 );
