@@ -9,9 +9,7 @@ import org.locationtech.jts.geom.Point;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 /**
@@ -88,24 +86,17 @@ public class CS4PlayasData {
             name = "remarks")
     private String remarks;
 
-    // @ManyToMany
-    // @JoinTable(
-    // name = "data_observed_property_counts",
-    // joinColumns = @JoinColumn(
-    // name = "dataId"))
-    // @Column(
-    // name = "observed_properties_counts")
-    // private Set<CS4PlayasObservedPropertyCount> observedPropertyCounts = new
-    // HashSet<CS4PlayasObservedPropertyCount>();
+    @OneToMany
+    private Set<CS4PlayasObservedPropertyCount> observedPropertyCount = new HashSet<CS4PlayasObservedPropertyCount>();
 
-    @ManyToMany
-    @JoinTable(
-            name = "cs4_playas_data_observed_properties",
-            joinColumns = @JoinColumn(
-                    name = "id"))
-    @Column(
-            name = "observed_properties")
-    private Set<ObservedProperty> observedProperties = new HashSet<ObservedProperty>();
+//    @ManyToMany
+//    @JoinTable(
+//            name = "cs4_playas_data_observed_properties",
+//            joinColumns = @JoinColumn(
+//                    name = "id"))
+//    @Column(
+//            name = "observed_properties")
+//    private Set<ObservedProperty> observedProperties = new HashSet<ObservedProperty>();
 
     public CS4PlayasData() {
 
@@ -255,37 +246,35 @@ public class CS4PlayasData {
         this.remarks = remarks;
     }
 
-    // public Set<CS4PlayasObservedPropertyCount> getObservedPropertyCounts() {
-    // return observedPropertyCounts;
-    // }
-    //
-    // public void setObservedPropertyCounts(Set<CS4PlayasObservedPropertyCount>
-    // observedPropertyCounts) {
-    // this.observedPropertyCounts = observedPropertyCounts;
-    // }
-    //
-    // public void addObservedPropertyCount(CS4PlayasObservedPropertyCount
-    // observedPropertyCount) {
-    // if(observedPropertyCount == null) {
-    // this.observedPropertyCounts = new HashSet<>();
-    // }
-    // this.observedPropertyCounts.add(observedPropertyCount);
-    // }
-
-    public Set<ObservedProperty> getAggregates() {
-        return observedProperties;
+    public Set<CS4PlayasObservedPropertyCount> getObservedPropertyCount() {
+        return observedPropertyCount;
     }
 
-    public void setAggregates(Set<ObservedProperty> aggregates) {
-        this.observedProperties = aggregates;
+    public void setObservedPropertyCount(Set<CS4PlayasObservedPropertyCount> observedPropertyCount) {
+        this.observedPropertyCount = observedPropertyCount;
     }
 
-    public void addAggregate(ObservedProperty dataReference) {
-        if (observedProperties == null) {
-            this.observedProperties = new HashSet<>();
+    public void addObservedPropertyCount(CS4PlayasObservedPropertyCount observedPropertyCount) {
+        if (observedPropertyCount == null) {
+            this.observedPropertyCount = new HashSet<>();
         }
-        this.observedProperties.add(dataReference);
+        this.observedPropertyCount.add(observedPropertyCount);
     }
+
+//    public Set<ObservedProperty> getAggregates() {
+//        return observedProperties;
+//    }
+//
+//    public void setAggregates(Set<ObservedProperty> aggregates) {
+//        this.observedProperties = aggregates;
+//    }
+//
+//    public void addAggregate(ObservedProperty dataReference) {
+//        if (observedProperties == null) {
+//            this.observedProperties = new HashSet<>();
+//        }
+//        this.observedProperties.add(dataReference);
+//    }
 
     @Override
     public String toString() {
