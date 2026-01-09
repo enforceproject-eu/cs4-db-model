@@ -1,8 +1,7 @@
-package org.n52.project.enforce.cs4.playas.db.repository;
+package org.n52.project.enforce.cs4.api.impl.manorba;
 
 import java.util.Optional;
 
-import org.n52.project.enforce.cs4.playas.db.model.CS4PlayasObservedProperty;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -24,9 +23,7 @@ public interface CS4PlayasObservedPropertyRepository extends JpaRepository<CS4Pl
      *
      * @param id
      *            an Integer
-     * @return a
-     *         {@link CS4PlayasObservedProperty}
-     *         object
+     * @return a {@link CS4PlayasObservedProperty} object
      */
     Optional<CS4PlayasObservedProperty> findById(Integer id);
 }

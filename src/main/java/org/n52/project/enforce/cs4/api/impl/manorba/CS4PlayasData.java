@@ -1,4 +1,4 @@
-package org.n52.project.enforce.cs4.playas.db.model;
+package org.n52.project.enforce.cs4.api.impl.manorba;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -10,8 +10,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 /**
@@ -88,27 +86,27 @@ public class CS4PlayasData {
             name = "remarks")
     private String remarks;
 
-    
-//    @JoinTable(
-//            name = "cs4_playas_data_observed_property_count",
-//            joinColumns = @JoinColumn(
-//                    name = "id"))
-//    @Column(
-//            name = "observed_property_count")
-//    @ElementCollection
-//    @MapKeyColumn(name="observed_property_id")
-//    @Column(name="count")
+    // @JoinTable(
+    // name = "cs4_playas_data_observed_property_count",
+    // joinColumns = @JoinColumn(
+    // name = "id"))
+    // @Column(
+    // name = "observed_property_count")
+    // @ElementCollection
+    // @MapKeyColumn(name="observed_property_id")
+    // @Column(name="count")
     @ElementCollection
     private Map<CS4PlayasObservedProperty, Integer> observedPropertyCount = new HashMap<>();
 
-//    @ManyToMany
-//    @JoinTable(
-//            name = "cs4_playas_data_observed_properties",
-//            joinColumns = @JoinColumn(
-//                    name = "id"))
-//    @Column(
-//            name = "observed_properties")
-//    private Set<ObservedProperty> observedProperties = new HashSet<ObservedProperty>();
+    // @ManyToMany
+    // @JoinTable(
+    // name = "cs4_playas_data_observed_properties",
+    // joinColumns = @JoinColumn(
+    // name = "id"))
+    // @Column(
+    // name = "observed_properties")
+    // private Set<ObservedProperty> observedProperties = new
+    // HashSet<ObservedProperty>();
 
     public CS4PlayasData() {
 
@@ -266,7 +264,8 @@ public class CS4PlayasData {
         this.observedPropertyCount = observedPropertyCount;
     }
 
-    public void putObservedPropertyCount(CS4PlayasObservedProperty observedProperty, Integer count) {
+    public void putObservedPropertyCount(CS4PlayasObservedProperty observedProperty,
+            Integer count) {
         if (observedPropertyCount == null) {
             this.observedPropertyCount = new HashMap<>();
         }

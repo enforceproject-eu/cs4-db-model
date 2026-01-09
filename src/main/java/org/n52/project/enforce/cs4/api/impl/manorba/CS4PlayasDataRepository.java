@@ -1,6 +1,5 @@
-package org.n52.project.enforce.cs4.playas.db.repository;
+package org.n52.project.enforce.cs4.api.impl.manorba;
 
-import org.n52.project.enforce.cs4.playas.db.model.CS4PlayasData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -9,11 +8,11 @@ import org.springframework.data.jpa.repository.Query;
  * Data repository.
  * </p>
  *
- * @author Benjamin Pross 
+ * @author Benjamin Pross
  * @since 1.0.0
  */
 public interface CS4PlayasDataRepository extends JpaRepository<CS4PlayasData, Integer> {
-    
+
     /**
      * <p>
      * getGeoJson.

@@ -1,4 +1,4 @@
-package org.n52.project.enforce.cs4.playas.db.model;
+package org.n52.project.enforce.cs4.api.impl.manorba;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
