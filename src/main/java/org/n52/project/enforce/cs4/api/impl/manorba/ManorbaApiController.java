@@ -9,6 +9,7 @@ import org.n52.project.enforce.cs4.api.ManorbaApi;
 import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaDataRepository;
 import org.n52.project.enforce.cs4.util.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,9 +32,9 @@ public class ManorbaApiController extends BaseController implements ManorbaApi {
     }
 
     @Override
-    public ResponseEntity<Serializable> addCs4ManorbaDataAsBody(@Valid String body) {
+    public ResponseEntity<Serializable> addCs4ManorbaDataAsBody(@Valid Resource body) {
         try {
-            utils.readExcelFile(body);
+            utils.readExcelFile(body.getInputStream());
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }

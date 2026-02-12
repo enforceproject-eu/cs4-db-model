@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 import org.n52.project.enforce.cs4.model.FeatureCollection;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -91,7 +92,7 @@ public interface ManorbaApi {
     ResponseEntity<Serializable> addCs4ManorbaDataAsBody(@Parameter(
             name = "body",
             description = "feature data",
-            required = true) @Valid @RequestBody String body);
+            required = true) @Valid @RequestBody Resource body);
 
     /**
      * GET /cs4_manorba_data : get data gathered by the MANORBA app get data
