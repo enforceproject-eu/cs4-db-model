@@ -38,13 +38,13 @@ CREATE TABLE IF NOT EXISTS public.cs4playas_observed_property
     CONSTRAINT cs4playas_observed_property_pkey PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public.cs4playas_data_observed_property_count
+CREATE TABLE IF NOT EXISTS public.cs4_playas_data_observed_property_count
 (
-    cs4playas_data_id integer NOT NULL,
+    cs4_playas_data_id integer NOT NULL,
     observed_property_count integer,
     observed_property_count_key integer NOT NULL,
-    CONSTRAINT cs4playas_data_observed_property_count_pkey PRIMARY KEY (cs4playas_data_id, observed_property_count_key),
-    CONSTRAINT cs4playas_data_fkey FOREIGN KEY (cs4playas_data_id)
+    CONSTRAINT cs4playas_data_observed_property_count_pkey PRIMARY KEY (cs4_playas_data_id, observed_property_count_key),
+    CONSTRAINT cs4playas_data_fkey FOREIGN KEY (cs4_playas_data_id)
         REFERENCES public.cs4playas_data (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
@@ -98,7 +98,7 @@ $BODY$
 	  )
       FROM (
 	  SELECT to_jsonb(row) as property
-      FROM (SELECT o.name, c.observed_property_count FROM public.cs4playas_data_observed_property_count as c join cs4playas_observed_property as o on c.observed_property_count_key = o.id where c.cs4playas_data_id = $1) row) properties;
+      FROM (SELECT o.name, c.observed_property_count FROM public.cs4_playas_data_observed_property_count as c join cs4playas_observed_property as o on c.observed_property_count_key = o.id where c.cs4_playas_data_id = $1) row) properties;
 $BODY$
 LANGUAGE SQL;
 

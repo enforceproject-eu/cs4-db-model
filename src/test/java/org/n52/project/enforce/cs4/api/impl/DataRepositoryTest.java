@@ -1,9 +1,9 @@
 package org.n52.project.enforce.cs4.api.impl;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -18,11 +18,10 @@ import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaData;
 import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 public class DataRepositoryTest extends RepositoryTest {
 
@@ -57,35 +56,30 @@ public class DataRepositoryTest extends RepositoryTest {
         dataRepository.saveAndFlush(data3);
         String geoJson = dataRepository.getGeoJson();
         assertNotNull(geoJson);
-        try {
-            JsonNode geojsonNode = objectMapper.readTree(geoJson);
-            assertTrue(geojsonNode instanceof ObjectNode);
-            ObjectNode geojsonObjectNode = (ObjectNode)geojsonNode;
-            assertEquals(geojsonObjectNode.get("type").asText(), "FeatureCollection");
-            JsonNode featuresNode = geojsonObjectNode.get("features");
-            assertTrue(featuresNode instanceof ArrayNode);
-            ArrayNode featuresArrayNode = (ArrayNode)featuresNode;
-            assertEquals(featuresArrayNode.size(), 3);
-            for (int i = 0; i < featuresArrayNode.size(); i++) {
-                JsonNode featureNode = featuresArrayNode.get(i);
-                assertTrue(featureNode instanceof ObjectNode);
-                ObjectNode featureObjectNode = (ObjectNode)featureNode;
-                String id = featureObjectNode.get("id").asText();
-                String data1Id = data1.getId().toString();
-                if(id.equals(data1Id)) {
-                    JsonNode geometryNode = featureObjectNode.get("geometry");
-                    assertTrue(geometryNode instanceof ObjectNode);
-                    ObjectNode geometryObjectNode = (ObjectNode) geometryNode;
-                    JsonNode coordinatesNode = geometryObjectNode.get("coordinates");
-                    assertTrue(coordinatesNode instanceof ArrayNode);
-                    ArrayNode coordinatesArrayNode = (ArrayNode) coordinatesNode;                    
-                    assertEquals(df.format(coordinatesArrayNode.get(0).asDouble()), df.format(data1.getLocation().getCoordinate().x));
-                    break;
-                }
+        JsonNode geojsonNode = objectMapper.readTree(geoJson);
+        assertTrue(geojsonNode instanceof ObjectNode);
+        ObjectNode geojsonObjectNode = (ObjectNode)geojsonNode;
+        assertEquals(geojsonObjectNode.get("type").asText(), "FeatureCollection");
+        JsonNode featuresNode = geojsonObjectNode.get("features");
+        assertTrue(featuresNode instanceof ArrayNode);
+        ArrayNode featuresArrayNode = (ArrayNode)featuresNode;
+        assertEquals(featuresArrayNode.size(), 3);
+        for (int i = 0; i < featuresArrayNode.size(); i++) {
+            JsonNode featureNode = featuresArrayNode.get(i);
+            assertTrue(featureNode instanceof ObjectNode);
+            ObjectNode featureObjectNode = (ObjectNode)featureNode;
+            String id = featureObjectNode.get("id").asText();
+            String data1Id = data1.getId().toString();
+            if(id.equals(data1Id)) {
+                JsonNode geometryNode = featureObjectNode.get("geometry");
+                assertTrue(geometryNode instanceof ObjectNode);
+                ObjectNode geometryObjectNode = (ObjectNode) geometryNode;
+                JsonNode coordinatesNode = geometryObjectNode.get("coordinates");
+                assertTrue(coordinatesNode instanceof ArrayNode);
+                ArrayNode coordinatesArrayNode = (ArrayNode) coordinatesNode;                    
+                assertEquals(df.format(coordinatesArrayNode.get(0).asDouble()), df.format(data1.getLocation().getCoordinate().x));
+                break;
             }
-            
-        } catch (JsonProcessingException e) {
-            fail(e.getMessage());
         }
         assertTrue(geoJson.contains(data1.getId().toString()));
         assertTrue(geoJson.contains(data2.getId().toString()));

@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,13 +29,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.datatype.joda.JodaModule;
 
 @Component
 @ConfigurationProperties
@@ -61,7 +62,7 @@ public class MinkaApiFetcher {
     public MinkaApiFetcher(Cs4MinkaDataRepository dataRepository, Utils utils, Environment environment) {
 
         this.mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+//        mapper.registerModule(Collections.singletonList(new JodaModule()));
         this.utils = utils;
         urlSpec = environment.getProperty("minka.url.spec");
         initialize = Boolean.parseBoolean(environment.getProperty("minka.db.initialize"));
@@ -215,7 +216,7 @@ public class MinkaApiFetcher {
 
     public <T> T get(URL url,
             Class<T> type) throws StreamReadException, DatabindException, IOException {
-        return mapper.readValue(url, type);
+        return mapper.readValue(url.openStream(), type);
     }
 
     URL findEndpoint() throws MalformedURLException, IOException, URISyntaxException {

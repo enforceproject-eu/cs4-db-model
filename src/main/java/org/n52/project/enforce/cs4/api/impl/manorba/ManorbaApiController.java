@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.annotation.Generated;
 import jakarta.validation.Valid;
 
@@ -22,6 +23,7 @@ import jakarta.validation.Valid;
         date = "2025-12-04T07:49:15.855249900+01:00[Europe/Berlin]",
         comments = "Generator version: 7.13.0")
 @Controller
+@SecurityRequirement(name = "basicAuth")
 @RequestMapping("${openapi.eNFORCEDataAccess.base-path:}")
 public class ManorbaApiController extends BaseController implements ManorbaApi {
 

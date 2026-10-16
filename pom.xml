@@ -12,5 +12,9 @@
 	<properties>
 		<openapi-spec>/src/main/resources/specs/data-management/enforce_cs4_dataAccessAPI.yaml</openapi-spec>
 		<base-package>org.n52.project.enforce.cs4</base-package>
+        <org.springframework.boot.version>4.1.1</org.springframework.boot.version>
+        <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+        <org.flywaydb.version>11.0.0</org.flywaydb.version>
+		<argLine/>
 	</properties> 
 </project>
