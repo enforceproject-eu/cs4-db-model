@@ -4,6 +4,7 @@ package org.n52.project.enforce.cs4.api.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -18,10 +19,11 @@ import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaData;
 import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DataRepositoryTest extends RepositoryTest {
 
@@ -56,7 +58,12 @@ public class DataRepositoryTest extends RepositoryTest {
         dataRepository.saveAndFlush(data3);
         String geoJson = dataRepository.getGeoJson();
         assertNotNull(geoJson);
-        JsonNode geojsonNode = objectMapper.readTree(geoJson);
+        JsonNode geojsonNode = null;
+        try {
+            geojsonNode = objectMapper.readTree(geoJson);
+        } catch (JsonProcessingException e) {
+            fail(e.getMessage());
+        }
         assertTrue(geojsonNode instanceof ObjectNode);
         ObjectNode geojsonObjectNode = (ObjectNode)geojsonNode;
         assertEquals(geojsonObjectNode.get("type").asText(), "FeatureCollection");
