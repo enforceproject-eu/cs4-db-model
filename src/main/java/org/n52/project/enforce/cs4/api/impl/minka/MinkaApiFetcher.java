@@ -132,7 +132,14 @@ public class MinkaApiFetcher {
     private void checkForUpdates() throws Exception {
         UUID uuid = UUID.randomUUID();
         File dataDirectory = new File(dataDir + "/" + System.currentTimeMillis());
-        dataDirectory.mkdir();
+        boolean dataDirCreated = false;
+        try {
+            dataDirCreated = dataDirectory.mkdirs();
+        } catch (Exception e) {
+            LOG.error(e.getMessage());            
+        } finally {
+            LOG.info("Data dir created: " + dataDirCreated);
+        }
         File file = new File(dataDirectory.getAbsolutePath() + "/" + uuid);
         try (BufferedInputStream in = new BufferedInputStream(updateUrl.openStream());
                 FileOutputStream fileOutputStream = new FileOutputStream(file)) {
@@ -158,7 +165,11 @@ public class MinkaApiFetcher {
                 for (JsonNode jsonNode : resultsArray) {
                     UUID id = utils.getId(jsonNode);
                     if (utils.ckeckIdIsInDb(id)) {
-                        mapper.writer().writeValue(new File(dataDirectory.getAbsolutePath() + "/" + id), jsonNode);
+                        try {
+                            mapper.writer().writeValue(new File(dataDirectory.getAbsolutePath() + "/" + id), jsonNode);
+                        } catch (Exception e) {
+                            LOG.info("Could not write Minka response to file.");
+                        }
                         utils.updateData(jsonNode);
                     }
                 }
@@ -174,7 +185,14 @@ public class MinkaApiFetcher {
     private void fetchAndStoreData(URL url) throws Exception {
         UUID uuid = UUID.randomUUID();
         File dataDirectory = new File(dataDir + "/" + System.currentTimeMillis());
-        dataDirectory.mkdir();
+        boolean dataDirCreated = false;
+        try {
+            dataDirCreated = dataDirectory.mkdirs();
+        } catch (Exception e) {
+            LOG.error(e.getMessage());            
+        } finally {
+            LOG.info("Data dir created: " + dataDirCreated);
+        }
         File file = new File(dataDirectory.getAbsolutePath() + "/" + uuid);
         try (BufferedInputStream in = new BufferedInputStream(url.openStream());
                 FileOutputStream fileOutputStream = new FileOutputStream(file)) {
@@ -203,7 +221,11 @@ public class MinkaApiFetcher {
                         LOG.info(String.format("Data with id %s already exists in database.", id.toString()));
                         continue;
                     }
-                    mapper.writer().writeValue(new File(dataDirectory.getAbsolutePath() + "/" + id), jsonNode);
+                    try {
+                        mapper.writer().writeValue(new File(dataDirectory.getAbsolutePath() + "/" + id), jsonNode);
+                    } catch (Exception e) {
+                        LOG.info("Could not write Minka response to file.");
+                    }
                     utils.createNewData(jsonNode);
                     LOG.info("New Data was created.");
                 }
