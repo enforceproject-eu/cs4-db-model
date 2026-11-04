@@ -85,10 +85,12 @@ public class Utils {
         Point location = geometryFactory.createPoint(new Coordinate(lon, lat));
         Cs4MinkaData dbData = new Cs4MinkaData(getId(jsonNode));
         dbData.setUserId(userId.asInt());
-        try {
-            dbData.setMediaUrl(new URI(photoUrl.asText()).toURL());
-        } catch (MalformedURLException | URISyntaxException e) {
-            LOG.error(e.getMessage());
+        if ((photoUrl != null) && !photoUrl.isMissingNode()) {
+            try {
+                dbData.setMediaUrl(new URI(photoUrl.asText()).toURL());
+            } catch (MalformedURLException | URISyntaxException | IllegalArgumentException e) {
+                LOG.error(e.getMessage());
+            }
         }
         dbData.setLocation(location);
         dbData.setSpeciesName(speciesGuess.asText());
