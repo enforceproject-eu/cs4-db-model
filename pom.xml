@@ -16,5 +16,13 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <org.flywaydb.version>11.0.0</org.flywaydb.version>
 		<argLine/>
-	</properties> 
+	</properties>
+	
+	<dependencies>	
+		<dependency>
+			<groupId>org.n52.project.enforce</groupId>
+	        <artifactId>common-data-model</artifactId>
+	        <version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
 </project>

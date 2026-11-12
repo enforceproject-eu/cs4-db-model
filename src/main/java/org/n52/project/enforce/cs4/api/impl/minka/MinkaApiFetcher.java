@@ -227,6 +227,7 @@ public class MinkaApiFetcher {
                         LOG.info("Could not write Minka response to file.");
                     }
                     utils.createNewData(jsonNode);
+                    utils.convertToCdm(jsonNode, dataDirectory);
                     LOG.info("New Data was created.");
                 }
             }
