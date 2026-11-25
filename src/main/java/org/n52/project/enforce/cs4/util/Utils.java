@@ -2,6 +2,7 @@ package org.n52.project.enforce.cs4.util;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,10 +22,14 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
@@ -34,6 +39,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
@@ -49,8 +55,21 @@ import org.n52.project.enforce.cs4.api.impl.manorba.CS4PlayasObservedProperty;
 import org.n52.project.enforce.cs4.api.impl.manorba.CS4PlayasObservedPropertyRepository;
 import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaData;
 import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaDataRepository;
+import org.openprovenance.prov.interop.InteropFramework;
+import org.openprovenance.prov.model.Activity;
+import org.openprovenance.prov.model.Agent;
+import org.openprovenance.prov.model.Document;
+import org.openprovenance.prov.model.Entity;
+import org.openprovenance.prov.model.Namespace;
+import org.openprovenance.prov.model.ProvFactory;
+import org.openprovenance.prov.model.QualifiedName;
+import org.openprovenance.prov.model.StatementOrBundle;
+import org.openprovenance.prov.model.WasAttributedTo;
+import org.openprovenance.prov.model.WasGeneratedBy;
+import org.openprovenance.prov.model.interop.Formats.ProvFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
 
@@ -65,30 +84,54 @@ public class Utils {
     private CS4PlayasDataRepository cs4PlayasDataRepository;
 
     private CS4PlayasObservedPropertyRepository cs4PlayasobservedPropertyRepository;
-    
+
     private CdmValidationStatusRepository cdmValidationStatusRepository;
-    
+
     private CdmObservationTypeRepository cdmObservationTypeRepository;
-    
+
     private CdmEvidenceTypeRepository cdmEvidenceTypeRepository;
-    
+
     private CommonDataModelRepository commonDataModelRepository;
 
     DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyy");
 
     GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
+    private String dataDir;
+
+    private final ProvFactory pFactory;
+
+    private final Namespace ns;
+
+    public static final String ENFORCE_NS = "http://join-enforce.eu";
+
+    public static final String ENFORCE_PREFIX = "enforce";
+
+    public static final String CS4_PREFIX = "cs4";
+
+    public static final String CS4_NS = "https://www.barcelona.cat/";
+
     private static Logger LOG = LoggerFactory.getLogger(Utils.class);
 
     public Utils(Cs4MinkaDataRepository dataRepository, CS4PlayasDataRepository cs4PlayasDataRepository,
             CS4PlayasObservedPropertyRepository cs4PlayasobservedPropertyRepository,
-            CommonDataModelRepository commonDataModelRepository,
-            CdmEvidenceTypeRepository cdmEvidenceTypeRepository) {
+            CommonDataModelRepository commonDataModelRepository, CdmEvidenceTypeRepository cdmEvidenceTypeRepository,
+            Environment environment) {
         this.dataRepository = dataRepository;
         this.cs4PlayasDataRepository = cs4PlayasDataRepository;
         this.cs4PlayasobservedPropertyRepository = cs4PlayasobservedPropertyRepository;
         this.cdmEvidenceTypeRepository = cdmEvidenceTypeRepository;
         this.commonDataModelRepository = commonDataModelRepository;
+        dataDir = environment.getProperty("data.dir");
+        if(dataDir == null || dataDir.isEmpty()) {
+            dataDir = System.getProperty("java.io.tmpdir");
+        }
+        pFactory = InteropFramework.getDefaultFactory();
+        ns = new Namespace();
+        ns.addKnownNamespaces();
+        ns.register(ENFORCE_PREFIX, ENFORCE_NS);
+        ns.register(CS4_PREFIX, CS4_NS);
+
     }
 
     public boolean ckeckIdIsInDb(UUID id) {
@@ -147,7 +190,7 @@ public class Utils {
             if (newUpdatedAt.isAfter(dbUpdatedAt)) {
                 dbData.setUpdatedDatetime(newUpdatedAt);
                 JsonNode speciesGuessNode = jsonNode.path("species_guess");
-                if(speciesGuessNode != null) {
+                if (speciesGuessNode != null) {
                     dbData.setSpeciesName(speciesGuessNode.asText());
                 }
                 dataRepository.save(dbData);
@@ -159,10 +202,19 @@ public class Utils {
     public void readExcelFile(String excelFileAsString) throws IOException {
         readExcelFile(new ByteArrayInputStream(excelFileAsString.getBytes()));
     }
-    
+
     public void readExcelFile(InputStream inputstream) throws IOException {
         File tmpExcelFile = File.createTempFile("excel", ".xlsx");
         IOUtils.copy(inputstream, new FileOutputStream(tmpExcelFile));
+        byte[] fileData = Files.readAllBytes(Paths.get(tmpExcelFile.getAbsolutePath()));
+        byte[] hash;
+        String checksum = "";
+        try {
+            hash = MessageDigest.getInstance("MD5").digest(fileData);
+            checksum = new BigInteger(1, hash).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            LOG.error(e.getMessage());
+        }
         Workbook workbook = new XSSFWorkbook(new FileInputStream(tmpExcelFile));
         Sheet sheet = workbook.getSheetAt(0);
         Row firstRow = sheet.getRow(0);
@@ -256,12 +308,14 @@ public class Utils {
 
                 Optional<CS4PlayasObservedProperty> potentialObservedPeoperty =
                         cs4PlayasobservedPropertyRepository.findById(k);
-                data.putObservedPropertyCount(potentialObservedPeoperty.get(), (int)cell.getNumericCellValue());
+                data.putObservedPropertyCount(potentialObservedPeoperty.get(), (int) cell.getNumericCellValue());
             }
             row = sheet.getRow(91);
             cell = row.getCell(j);
             data.setRemarks(cell.getStringCellValue());
             cs4PlayasDataRepository.saveAndFlush(data);
+            File dataDirectory = new File(dataDir + "/" + System.currentTimeMillis());
+            convertToCdm(data, dataDirectory, checksum);
             LOG.info(String.format("Data with id %d added to cs4 data.", data.getId()));
         }
         workbook.close();
@@ -282,8 +336,99 @@ public class Utils {
         }
         return geometryFactory.createPoint(new Coordinate(0, 0));
     }
-    
-    public void convertToCdm(JsonNode jsonNode, File dataDirectory) {
+
+    public void convertToCdm(CS4PlayasData data,
+            File dataDirectory,
+            String checksum) {
+
+        Boolean authorityNotified;
+        String authorityReference;
+        String campaignId = data.getProject();
+        int caseStudyId = 4;
+        String chainOfCustodyReference;
+        String contributorId = data.getProject();
+        OffsetDateTime createdAt = OffsetDateTime.now();
+        String description;
+        OffsetDateTime endTime;
+        String evidenceId = null;
+        String geometry;
+        Double locationAccuracyM = -1d;
+        OffsetDateTime modifiedAt = null;
+        String observationId = String.valueOf(data.getId());
+        OffsetDateTime observationTime = data.getCleaningDate().toInstant().atOffset(ZoneOffset.UTC);
+        ;
+        String originalEvidenceHash = checksum;
+        String originalRecordId = observationId;
+        Boolean personalDataFlag = false;
+        String processingActivityRef;
+        String protocolId;
+        String protocolVersion;
+        String provenanceRecord;
+        Double qualityScore;
+        String recordVersion = "1";
+        OffsetDateTime submissionTime = OffsetDateTime.now();
+        String validatorId;
+        String value = "";
+        // N/A
+        int sensitiveContentFlagId = 1;
+        // waste
+        int observationTypeId = 10;
+        int observedPropertyId = 1;
+        int unitId;
+        int categoryId;
+        int locationSourceId;
+        int contributorRoleId = 1;
+        // paper_form
+        int collectionMethodId = 4;
+        // document
+        int evidenceTypeId = 5;
+        int validationStatusId = 1;
+        int validationMethodId;
+        // restricted
+        int accessLevelId = 1;
+        int retentionClassId;
+        int complianceRelevanceId;
+        int suspectedViolationTypeId;
+        // waste
+        int regulatoryDomainId = 3;
+        int evidenceStatusId;
+        int evidenceAccessRestrictionId;
+        int deviceOrSensorId;
+        // restricted
+        int licenceId = 1;
+
+        geometry = new GeoJsonWriter().write(data.getFinalCoordinates());
+        Map<CS4PlayasObservedProperty, Integer> observerPropertyCountMap = data.getObservedPropertyCount();
+        Set<Entry<CS4PlayasObservedProperty, Integer>> entries = observerPropertyCountMap.entrySet();
+        for (Entry<CS4PlayasObservedProperty, Integer> entry : entries) {
+            if (entry.getKey().getName().equalsIgnoreCase("wipes")) {
+                value = String.valueOf(entry.getValue());
+            }
+        }
+
+        Document provDoc = makeDocument(originalRecordId, contributorId, campaignId);
+        InteropFramework intF = new InteropFramework();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        intF.writeDocument(byteArrayOutputStream, provDoc, ProvFormat.JSONLD);
+        CommonDataModel dataModel = new CommonDataModel(caseStudyId, createdAt, modifiedAt, observationId,
+                observationTime, personalDataFlag, recordVersion, submissionTime, observationTypeId, observedPropertyId,
+                collectionMethodId, validationStatusId, accessLevelId, licenceId);
+        dataModel.setSensitiveContentFlagId(sensitiveContentFlagId);
+        dataModel.setCampaignId(campaignId);
+        dataModel.setContributorId(contributorId);
+        dataModel.setGeometry(geometry);
+        dataModel.setValue(value);
+        dataModel.setRegulatoryDomainId(regulatoryDomainId);
+        dataModel.setLocationAccuracyM(locationAccuracyM);
+        dataModel.setContributorRoleId(contributorRoleId);
+        dataModel.setEvidenceId(evidenceId);
+        dataModel.setOriginalEvidenceHash(originalEvidenceHash);
+        dataModel.setProvenanceRecord(byteArrayOutputStream.toString());
+        commonDataModelRepository.saveAndFlush(dataModel);
+    }
+
+    public void convertToCdm(JsonNode jsonNode,
+            File dataDirectory) {
 
         Boolean authorityNotified;
         String authorityReference;
@@ -301,7 +446,7 @@ public class Utils {
         String observationId = jsonNode.path("uuid").asText();
         OffsetDateTime observationTime = null;
         String originalEvidenceHash = null;
-        String originalRecordId;
+        String originalRecordId = observationId;
         Boolean personalDataFlag = false;
         String processingActivityRef;
         String protocolId;
@@ -312,7 +457,7 @@ public class Utils {
         OffsetDateTime submissionTime = OffsetDateTime.now();
         String validatorId;
         String value;
-        //N/A
+        // N/A
         int sensitiveContentFlagId = 1;
         int observationTypeId = 1;
         int observedPropertyId = 1;
@@ -320,12 +465,12 @@ public class Utils {
         int categoryId;
         int locationSourceId;
         int contributorRoleId = 1;
-        //mobile_app
+        // mobile_app
         int collectionMethodId = 2;
         int evidenceTypeId;
         int validationStatusId = 1;
         int validationMethodId;
-        //restricted
+        // restricted
         int accessLevelId = 1;
         int retentionClassId;
         int complianceRelevanceId;
@@ -334,9 +479,9 @@ public class Utils {
         int evidenceStatusId;
         int evidenceAccessRestrictionId;
         int deviceOrSensorId;
-        //restricted
+        // restricted
         int licenceId = 1;
-        
+
         JsonNode time = jsonNode.path("time_observed_at");
         JsonNode locationNode = jsonNode.path("location");
         JsonNode speciesGuess = jsonNode.path("species_guess");
@@ -362,15 +507,15 @@ public class Utils {
                 byte[] data;
                 try {
                     data = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
-                    byte[] hash = MessageDigest.getInstance("MD5").digest(data);                    
+                    byte[] hash = MessageDigest.getInstance("MD5").digest(data);
                     String evidenceType = getEvidenceType(contentType);
                     Optional<Integer> evidenceTypeIdFromDb = cdmEvidenceTypeRepository.getIdForName(evidenceType);
-                    if(evidenceTypeIdFromDb.isPresent()) {
+                    if (evidenceTypeIdFromDb.isPresent()) {
                         evidenceTypeId = evidenceTypeIdFromDb.get();
                     }
-                    if(evidenceType.equals("photo")) {
+                    if (evidenceType.equals("photo")) {
                         evidenceId = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(data);
-                    } else if(evidenceType.equals("video")) {
+                    } else if (evidenceType.equals("video")) {
                         evidenceId = photoUrl.asText();
                     }
                     String checksum = new BigInteger(1, hash).toString(16);
@@ -378,11 +523,12 @@ public class Utils {
                 } catch (IOException | NoSuchAlgorithmException e) {
                     LOG.error(e.getMessage());
                 }
-//                try {
-//                    dbData.setMediaUrl(new URI(photoUrl.asText()).toURL());
-//                } catch (MalformedURLException | URISyntaxException | IllegalArgumentException e) {
-//                    LOG.error(e.getMessage());
-//                }
+                // try {
+                // dbData.setMediaUrl(new URI(photoUrl.asText()).toURL());
+                // } catch (MalformedURLException | URISyntaxException |
+                // IllegalArgumentException e) {
+                // LOG.error(e.getMessage());
+                // }
             }
         }
         String[] locationStringArray = locationNode.asText().split(",");
@@ -397,9 +543,9 @@ public class Utils {
         } catch (Exception e) {
             LOG.info("Error while parsing dates.", e.getMessage());
         }
-        
+
         JsonNode qualityGradeNode = jsonNode.get("quality_grade");
-        
+
         if (!qualityGradeNode.isMissingNode()) {
             String qualityGrade = qualityGradeNode.asText();
             switch (qualityGrade) {
@@ -410,8 +556,14 @@ public class Utils {
                 contributorRoleId = 1;
             }
         }
-        
-        CommonDataModel dataModel = new CommonDataModel(caseStudyId, createdAt, modifiedAt, observationId, observationTime, personalDataFlag, recordVersion, submissionTime, observationTypeId, observedPropertyId, collectionMethodId, validationStatusId, accessLevelId, licenceId);
+
+        Document provDoc = makeDocument(originalRecordId, contributorId, campaignId);
+        InteropFramework intF = new InteropFramework();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        intF.writeDocument(byteArrayOutputStream, provDoc, ProvFormat.JSONLD);
+        CommonDataModel dataModel = new CommonDataModel(caseStudyId, createdAt, modifiedAt, observationId,
+                observationTime, personalDataFlag, recordVersion, submissionTime, observationTypeId, observedPropertyId,
+                collectionMethodId, validationStatusId, accessLevelId, licenceId);
         dataModel.setSensitiveContentFlagId(sensitiveContentFlagId);
         dataModel.setCampaignId(campaignId);
         dataModel.setContributorId(contributorId);
@@ -422,9 +574,10 @@ public class Utils {
         dataModel.setContributorRoleId(contributorRoleId);
         dataModel.setEvidenceId(evidenceId);
         dataModel.setOriginalEvidenceHash(originalEvidenceHash);
+        dataModel.setProvenanceRecord(byteArrayOutputStream.toString());
         commonDataModelRepository.saveAndFlush(dataModel);
     }
-    
+
     private String getEvidenceType(String contentType) {
 
         String evidenceType = "";
@@ -445,7 +598,7 @@ public class Utils {
         }
         return evidenceType;
     }
-    
+
     private String findContentType(String url) throws IOException, URISyntaxException {
         String contentType = "";
         URLConnection connection = new URI(url).toURL().openConnection();
@@ -453,7 +606,7 @@ public class Utils {
         if (contentType != null && !contentType.isBlank()) {
             if (contentType.equals(MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE)) {
                 String suffix = url.substring(url.lastIndexOf(".") + 1);
-                if(suffix.equals("mov")) {
+                if (suffix.equals("mov")) {
                     contentType = "video/quicktime";
                 } else {
                     contentType = "image/" + suffix;
@@ -462,5 +615,35 @@ public class Utils {
         }
         return contentType;
     }
-    
+
+    public String getDataDir() {
+        return dataDir;
+    }
+
+    public Document makeDocument(String title,
+            String agent,
+            String project) {
+
+        Entity entity = pFactory.newEntity(qn(title));
+        entity.setValue(pFactory.newValue(title, pFactory.getName().XSD_STRING));
+
+        Agent agentAgent = pFactory.newAgent(qn(agent), agent);
+
+        WasAttributedTo attr1 = pFactory.newWasAttributedTo(null, entity.getId(), agentAgent.getId());
+
+        Activity projectActivity = pFactory.newActivity(qn(project));
+
+        WasGeneratedBy wsgb = pFactory.newWasGeneratedBy(entity, "collected", projectActivity);
+
+        Document document = pFactory.newDocument();
+        document.getStatementOrBundle().addAll(Arrays.asList(new StatementOrBundle[] { entity, agentAgent, attr1 }));
+        document.getStatementOrBundle().add(wsgb);
+        document.setNamespace(ns);
+        return document;
+    }
+
+    public QualifiedName qn(String n) {
+        return ns.qualifiedName(CS4_PREFIX, n, pFactory);
+    }
+
 }

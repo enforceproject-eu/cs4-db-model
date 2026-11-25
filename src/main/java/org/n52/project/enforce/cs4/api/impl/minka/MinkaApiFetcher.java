@@ -64,7 +64,7 @@ public class MinkaApiFetcher {
         this.utils = utils;
         urlSpec = environment.getProperty("minka.url.spec");
         initialize = Boolean.parseBoolean(environment.getProperty("minka.db.initialize"));
-        dataDir = environment.getProperty("data.dir");
+        dataDir = utils.getDataDir();
         try {
             updateUrl = new URI(String.format(environment.getProperty("minka.update.url.spec"),
                     dateTimeFormatter.format(OffsetDateTime.now()))).toURL();

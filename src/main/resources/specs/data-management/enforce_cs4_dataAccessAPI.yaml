@@ -103,6 +103,13 @@ paths:
       summary: Add a new geo-resource
       description: Add/Register a geo-resource dataset for a certain period of time
       operationId: addCs4ManorbaDataAsBody
+      parameters:      
+        - name: sanitize_locations
+          in: query
+          description: use the playas geocoding api to check the given coordinates
+          required: false
+          schema:
+            type: boolean
       requestBody:
         description: feature data
         content:

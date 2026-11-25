@@ -3,6 +3,7 @@ package org.n52.project.enforce.cs4.api;
 import org.n52.project.enforce.cs4.api.impl.manorba.CS4PlayasDataRepository;
 import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaDataRepository;
 import org.n52.project.enforce.cs4.util.Utils;
+import org.springframework.core.env.Environment;
 
 public abstract class BaseController {
 
@@ -12,11 +13,19 @@ public abstract class BaseController {
 
     protected Utils utils;
 
+    protected Environment environment;
+
     public BaseController(Cs4MinkaDataRepository dataRepository, Utils utils,
             CS4PlayasDataRepository cs4PlayasDataRepository) {
         this.dataRepository = dataRepository;
         this.cs4PlayasDataRepository = cs4PlayasDataRepository;
         this.utils = utils;
+    }
+
+    public BaseController(Cs4MinkaDataRepository dataRepository, Utils utils,
+            CS4PlayasDataRepository cs4PlayasDataRepository, Environment environment) {
+        this(dataRepository, utils, cs4PlayasDataRepository);
+        this.environment = environment;
     }
 
 }

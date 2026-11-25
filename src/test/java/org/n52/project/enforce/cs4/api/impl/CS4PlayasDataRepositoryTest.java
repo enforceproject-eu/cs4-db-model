@@ -1,7 +1,13 @@
-package org.n52.project.enforce.cs4.playas.db.model;
+package org.n52.project.enforce.cs4.api.impl;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
-import org.n52.project.enforce.cs4.api.impl.RepositoryTest;
 import org.n52.project.enforce.cs4.api.impl.manorba.CS4PlayasData;
 import org.n52.project.enforce.cs4.api.impl.manorba.CS4PlayasDataRepository;
 import org.n52.project.enforce.cs4.api.impl.manorba.CS4PlayasObservedProperty;
@@ -28,25 +34,8 @@ public class CS4PlayasDataRepositoryTest extends RepositoryTest {
         cs4PlayasDataRepository.save(data);
         CS4PlayasObservedProperty dataReference = new CS4PlayasObservedProperty(66, "ddsgdagag");
         observedPropertyRepository.save(dataReference);
-//        CS4PlayasObservedPropertyCountPK observedPropertyCountPk = new CS4PlayasObservedPropertyCountPK(data.getId(), 66);
-//        CS4PlayasObservedPropertyCount observedPropertyCount = new CS4PlayasObservedPropertyCount(observedPropertyCountPk);
-//        observedPropertyCount.setCount(2025);
-//        cs4PlayasObservedPropertyCountRepository.save(observedPropertyCount);
         data.putObservedPropertyCount(dataReference, 7);
-//        data.putObservedPropertyCount(dataReference, observedPropertyCount);
         cs4PlayasDataRepository.saveAndFlush(data);
     }
-    
-//    @Test
-//    void testReadata() {
-//        try {
-//            utils.readExcelFile(new FileInputStream(new File("D:\\52n\\Projekte\\ENFORCE\\Playas-test.xlsx")));
-//            assertTrue(cs4PlayasDataRepository.count() > 0);
-//        } catch (IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        
-//    }
 
 }

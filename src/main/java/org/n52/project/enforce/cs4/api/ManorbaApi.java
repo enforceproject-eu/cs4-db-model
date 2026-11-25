@@ -90,6 +90,12 @@ public interface ManorbaApi {
             consumes = { "application/enforce-cs4-playas-data" })
 
     ResponseEntity<Serializable> addCs4ManorbaDataAsBody(@Parameter(
+            name = "sanitize_locations",
+            description = "use the playas geocoding api to check the given coordinates",
+            in = ParameterIn.QUERY) @Valid @RequestParam(
+                    value = "sanitize_locations",
+                    required = false) Boolean sanitizeLocations,
+            @Parameter(
             name = "body",
             description = "feature data",
             required = true) @Valid @RequestBody Resource body);
