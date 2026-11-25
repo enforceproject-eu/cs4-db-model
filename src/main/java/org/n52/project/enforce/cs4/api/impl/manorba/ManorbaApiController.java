@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Base64;
 
+import org.apache.commons.logging.Log;
 import org.apache.http.HttpEntity;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -20,7 +23,11 @@ import org.n52.project.enforce.cs4.api.BaseController;
 import org.n52.project.enforce.cs4.api.ManorbaApi;
 import org.n52.project.enforce.cs4.api.impl.minka.Cs4MinkaDataRepository;
 import org.n52.project.enforce.cs4.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -42,8 +49,16 @@ import jakarta.validation.Valid;
 @SecurityRequirement(
         name = "basicAuth")
 @RequestMapping("${openapi.eNFORCEDataAccess.base-path:}")
+@Configuration
 public class ManorbaApiController extends BaseController implements ManorbaApi {
 
+    @Value("${enforce.user}")
+    String user;
+    @Value("${enforce.password}")
+    String password;
+    
+    private static Logger LOG = LoggerFactory.getLogger(ManorbaApiController.class);
+    
     @Autowired
     public ManorbaApiController(Cs4MinkaDataRepository dataRepository, Utils utils,
             CS4PlayasDataRepository cs4PlayasDataRepository, Environment environment) {
@@ -79,7 +94,16 @@ public class ManorbaApiController extends BaseController implements ManorbaApi {
     private InputStream requestPlayasGeocodingApi(InputStream originalInputStream) throws IOException {
         String playasGeocodingApiUrl =
                 environment.getProperty("playas.geocoding.api.url") + "processes/geocode-playas/execution";
-
+        
+        String host = AuthScope.ANY_HOST;
+        
+        try {
+            URI playasGeocodingApiUri = new URI(playasGeocodingApiUrl);
+            host = playasGeocodingApiUri.getHost();
+        } catch (URISyntaxException e) {
+            LOG.error(e.getMessage());
+        }
+        
         ObjectMapper objectMapper = new ObjectMapper();
 
         ObjectNode executeRequestNode = objectMapper.createObjectNode();
@@ -103,8 +127,8 @@ public class ManorbaApiController extends BaseController implements ManorbaApi {
         HttpEntity httpEntity = new StringEntity(executeRequestString);
         httpPost.setEntity(httpEntity);
         CredentialsProvider provider = new BasicCredentialsProvider();
-        AuthScope scope = new AuthScope("localhost", 8081);
-        provider.setCredentials(scope, new UsernamePasswordCredentials("enforce", "bsdb3231&#25F"));
+        AuthScope scope = new AuthScope(host, AuthScope.ANY_PORT);
+        provider.setCredentials(scope, new UsernamePasswordCredentials(user, password));
         CloseableHttpClient client = HttpClientBuilder.create().setDefaultCredentialsProvider(provider).build();
         CloseableHttpResponse response = client.execute(httpPost);
         HttpEntity responseEntity = response.getEntity();
