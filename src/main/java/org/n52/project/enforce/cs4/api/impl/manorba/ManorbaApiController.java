@@ -96,6 +96,13 @@ public class ManorbaApiController extends BaseController implements ManorbaApi {
                 environment.getProperty("playas.geocoding.api.url") + "processes/geocode-playas/execution";
         
         String host = AuthScope.ANY_HOST;
+        int port = AuthScope.ANY_PORT;
+        
+        try {
+            port = Integer.parseInt(environment.getProperty("playas.geocoding.api.port"));
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+        }
         
         try {
             URI playasGeocodingApiUri = new URI(playasGeocodingApiUrl);
@@ -127,13 +134,12 @@ public class ManorbaApiController extends BaseController implements ManorbaApi {
         HttpEntity httpEntity = new StringEntity(executeRequestString);
         httpPost.setEntity(httpEntity);
         CredentialsProvider provider = new BasicCredentialsProvider();
-        AuthScope scope = new AuthScope(host, AuthScope.ANY_PORT);
+        AuthScope scope = new AuthScope(host, port);
         provider.setCredentials(scope, new UsernamePasswordCredentials(user, password));
         CloseableHttpClient client = HttpClientBuilder.create().setDefaultCredentialsProvider(provider).build();
         CloseableHttpResponse response = client.execute(httpPost);
         HttpEntity responseEntity = response.getEntity();
         return responseEntity.getContent();
-
     }
 
 }
